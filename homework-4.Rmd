@@ -33,29 +33,39 @@ Problem 7 from Chapter 8 in the text. To be specific, please use a sequence of `
 In the lab, we applied random forests to the Boston data using mtry=6 and using ntree=25 and ntree=500. Create a plot displaying the test error resulting from random forests on this data set for a more com- prehensive range of values for mtry and ntree. You can model your plot after Figure 8.10. Describe the results obtained.
 
 ## Answer 1
+
 ```{r}
-set.seed(1)
+set.seed(1234)
 df <- tbl_df(Boston)
-inTraining <- createDataPartition(df$medv, p = .75, list = F)
-                                  training <- df[inTraining,]
-                                  testing <- df[-inTraining,]
-                                  
-set.seed(2)
-mtry <- c(3:9)
-ntree <- seq(25,500, len = 20)
-results <- tibble(mtry = rep(NA,140),
-                  ntree = rep(NA, 140),
-                  mse = rep(NA, 140))
-for(i in 1:7){
-  for(j in 1:20){
-    rf_train <- randomForest(medv ~ .,
-                              data = training,
-                              mtry = mtry[i],
-                              ntree = ntree[j])
-mse <- mean((predict(rf_train, newdata = testing) - testing$medv)^2)
-results[(i-1)*20 + j,] <- c(mtry[i], ntree[j], mse)
+
+for (k in 1:20){
+  inTraining <- createDataPartition(df$medv, p = .75, list = F)
+  training <- df[inTraining, ]
+  testing <- df[-inTraining, ]
+  mtry <- c(3:9)
+  ntree <- seq(25, 500, len = 20)
+  results <- tibble(trial = rep(NA, 140),
+  mtry = rep(NA, 140),
+  ntree = rep(NA, 140),
+  mse = rep(NA, 140)) 
+  for(i in 1:7){
+    cat(sprintf('Trial: %s, mtry: %s --- %s\n', k, mtry[i], Sys.time()))
+    for(j in 1:20){ 
+      rf_train <- randomForest(medv ~ .,
+                               data = training,
+                               mtry = mtry[i],
+                               ntree = ntree[j])
+      mse <- mean((predict(rf_train, newdata = testing) - testing$medv)^2)
+      results[(i-1)*20 + j, ] <- c(k, mtry[i], ntree[j], mse)
+    }
   }
+  if(exists("results_total")){
+  results_total <- bind_rows(results_total, results)
   }
+  else(
+  results_total <- results
+  )
+}
 ```
 
 ### Graph
@@ -67,45 +77,9 @@ p + geom_line() +
   scale_color_brewer("mtry", palette = "Dark2")
 ```
 
-```{r}
-library(doMC)
-registerDoMC(cores = 4)
-set.seed(1982)
-results <- tibble(ntree = ntree,
-                  mtry_3 = 1:20,
-                  mtry_4 = 1:20,
-                  mtry_5 = 1:20,
-                  mtry_6 = 1:20,
-                  mtry_7 = 1:20,
-                  mtry_8 = 1:20,
-                  mtry_9 = 1:20,
-                  mse = 1:20)
-for(i in 1:20){
-  cat(sprintf('ntree: %s --- %s\n', ntree[i],Sys.time()))
-  rf_boston_cv <- train(medv ~ .,
-                      data = training,
-                      method = "rf",
-                      ntree = ntree[i],
-                      importance = T,
-                      tuneGrid = data.frame(mtry = 3:9))
-  results[i, 2:8] <- rf_boston_cv$results$RMSE^2
-}
-```
+Describe the results obtained;
+The results indicate the mtry 6 (variables) with trees around 80 and again at trees around 280 have the lowest MSE.
 
-
-```{r}
-results
-```
-Problem 2
-### Graph
-```{r}
-#thing <- c(results$ntree,results$mtry_3,results$mtry_4,results$mtry_5,results$mtry_6,results$mtry_7,results$mtry_8,results$mtry_9,results$mse)
-p <- ggplot(data = results,
-           aes(x = ntree, y = mse, col= as.factor(mtry_3)))
-p + geom_line() +
-  geom_point() +
-  scale_color_brewer("mtry_3", palette = "Dark2")
-```
 
 Problem 8 from Chapter 8 in the text. Set your seed with 9823 and split into train/test using 50\% of your data in each split. In addition to parts (a) - (e), do the following:
 
@@ -151,7 +125,7 @@ test.MSE <- mean((y_hat - Carseats[test, ]$Sales)^2)
 print(test.MSE)
 ```
 
-#The most important indicator of sales appears to be 6) Price < 109.5 28   85.5800 12.190 * followed by  15) Advertising > 13.5 9   15.2700 11.920 *.  The Test MSE is 4.96.
+The most important indicator of sales appears to be shelf location and price  The Test MSE is 4.96.
 
 ### Part (c): Use cross-validation in order to determine the optimal level of tree complexity. Does pruning the tree improve the test MSE?
 
@@ -225,8 +199,8 @@ print(irf[order(irf[, 1]), ])
 
 ```{r}
 set.seed(9823)
-boost.Carseats=gbm(Sales~.,data=Carseats[train,],distribution="gaussian",n.trees=5000, interaction.depth=4)
-yhat.boost=predict(boost.Carseats,newdata=Carseats[-train,], n.trees=5000)
+boost.Carseats=gbm(Sales~.,data=Carseats[train,],distribution="gaussian",n.trees=2000, interaction.depth=3)
+yhat.boost=predict(boost.Carseats,newdata=Carseats[-train,], n.trees=2000)
 mean((yhat.boost-Carseats[test, ]$Sales)^2)
 ```
 
@@ -271,7 +245,7 @@ p + geom_col(fill = "#6e0000") +
 
 
 ```{r}
-test_preds <- predict(gbm_Carseats, newdata= testing)
+test_preds <- predict(gbm_Carseats, newdata=testing)
 Carseats_test_df <- testing %>%
   mutate(y_hat_gbm = test_preds,
          sq_err_gbm = (y_hat_gbm - Sales)^2)
@@ -285,7 +259,7 @@ lm.fit=lm(Sales~.,data=training)
 summary(lm.fit)
 ```
 
-
+## Test MSE
 ```{r}
 test_preds <- predict(lm.fit, newdata = testing)
 carseats_test_df <- testing %>%
@@ -294,10 +268,10 @@ carseats_test_df <- testing %>%
 mean(carseats_test_df$sq_err_rf_4)
 ```
 
-
 ```{r}
-## Test MSE
 mean((testing$Sales - predict(lm.fit, newdata = testing))^2)
 ```
 
 ### 3. Summarize your results.
+
+The linear model has the lowest mean squared error at 1.02.  Gradient boosting had a mean squared error of 1.51.  Ramdom forests 3.53
