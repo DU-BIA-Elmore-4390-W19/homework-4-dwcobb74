@@ -13,29 +13,179 @@ Answer 1
 --------
 
 ``` r
-set.seed(1)
+set.seed(1234)
 df <- tbl_df(Boston)
-inTraining <- createDataPartition(df$medv, p = .75, list = F)
-                                  training <- df[inTraining,]
-                                  testing <- df[-inTraining,]
-                                  
-set.seed(2)
-mtry <- c(3:9)
-ntree <- seq(25,500, len = 20)
-results <- tibble(mtry = rep(NA,140),
-                  ntree = rep(NA, 140),
-                  mse = rep(NA, 140))
-for(i in 1:7){
-  for(j in 1:20){
-    rf_train <- randomForest(medv ~ .,
-                              data = training,
-                              mtry = mtry[i],
-                              ntree = ntree[j])
-mse <- mean((predict(rf_train, newdata = testing) - testing$medv)^2)
-results[(i-1)*20 + j,] <- c(mtry[i], ntree[j], mse)
+
+for (k in 1:20){
+  inTraining <- createDataPartition(df$medv, p = .75, list = F)
+  training <- df[inTraining, ]
+  testing <- df[-inTraining, ]
+  mtry <- c(3:9)
+  ntree <- seq(25, 500, len = 20)
+  results <- tibble(trial = rep(NA, 140),
+  mtry = rep(NA, 140),
+  ntree = rep(NA, 140),
+  mse = rep(NA, 140)) 
+  for(i in 1:7){
+    cat(sprintf('Trial: %s, mtry: %s --- %s\n', k, mtry[i], Sys.time()))
+    for(j in 1:20){ 
+      rf_train <- randomForest(medv ~ .,
+                               data = training,
+                               mtry = mtry[i],
+                               ntree = ntree[j])
+      mse <- mean((predict(rf_train, newdata = testing) - testing$medv)^2)
+      results[(i-1)*20 + j, ] <- c(k, mtry[i], ntree[j], mse)
+    }
   }
+  if(exists("results_total")){
+  results_total <- bind_rows(results_total, results)
   }
+  else(
+  results_total <- results
+  )
+}
 ```
+
+    ## Trial: 1, mtry: 3 --- 2019-03-10 22:02:25
+    ## Trial: 1, mtry: 4 --- 2019-03-10 22:02:30
+    ## Trial: 1, mtry: 5 --- 2019-03-10 22:02:36
+    ## Trial: 1, mtry: 6 --- 2019-03-10 22:02:42
+    ## Trial: 1, mtry: 7 --- 2019-03-10 22:02:50
+    ## Trial: 1, mtry: 8 --- 2019-03-10 22:02:59
+    ## Trial: 1, mtry: 9 --- 2019-03-10 22:03:08
+    ## Trial: 2, mtry: 3 --- 2019-03-10 22:03:19
+    ## Trial: 2, mtry: 4 --- 2019-03-10 22:03:23
+    ## Trial: 2, mtry: 5 --- 2019-03-10 22:03:29
+    ## Trial: 2, mtry: 6 --- 2019-03-10 22:03:36
+    ## Trial: 2, mtry: 7 --- 2019-03-10 22:03:43
+    ## Trial: 2, mtry: 8 --- 2019-03-10 22:03:52
+    ## Trial: 2, mtry: 9 --- 2019-03-10 22:04:01
+    ## Trial: 3, mtry: 3 --- 2019-03-10 22:04:12
+    ## Trial: 3, mtry: 4 --- 2019-03-10 22:04:16
+    ## Trial: 3, mtry: 5 --- 2019-03-10 22:04:22
+    ## Trial: 3, mtry: 6 --- 2019-03-10 22:04:29
+    ## Trial: 3, mtry: 7 --- 2019-03-10 22:04:36
+    ## Trial: 3, mtry: 8 --- 2019-03-10 22:04:44
+    ## Trial: 3, mtry: 9 --- 2019-03-10 22:04:54
+    ## Trial: 4, mtry: 3 --- 2019-03-10 22:05:04
+    ## Trial: 4, mtry: 4 --- 2019-03-10 22:05:09
+    ## Trial: 4, mtry: 5 --- 2019-03-10 22:05:14
+    ## Trial: 4, mtry: 6 --- 2019-03-10 22:05:21
+    ## Trial: 4, mtry: 7 --- 2019-03-10 22:05:29
+    ## Trial: 4, mtry: 8 --- 2019-03-10 22:05:37
+    ## Trial: 4, mtry: 9 --- 2019-03-10 22:05:47
+    ## Trial: 5, mtry: 3 --- 2019-03-10 22:05:57
+    ## Trial: 5, mtry: 4 --- 2019-03-10 22:06:02
+    ## Trial: 5, mtry: 5 --- 2019-03-10 22:06:08
+    ## Trial: 5, mtry: 6 --- 2019-03-10 22:06:14
+    ## Trial: 5, mtry: 7 --- 2019-03-10 22:06:22
+    ## Trial: 5, mtry: 8 --- 2019-03-10 22:06:30
+    ## Trial: 5, mtry: 9 --- 2019-03-10 22:06:40
+    ## Trial: 6, mtry: 3 --- 2019-03-10 22:06:50
+    ## Trial: 6, mtry: 4 --- 2019-03-10 22:06:54
+    ## Trial: 6, mtry: 5 --- 2019-03-10 22:07:00
+    ## Trial: 6, mtry: 6 --- 2019-03-10 22:07:07
+    ## Trial: 6, mtry: 7 --- 2019-03-10 22:07:14
+    ## Trial: 6, mtry: 8 --- 2019-03-10 22:07:23
+    ## Trial: 6, mtry: 9 --- 2019-03-10 22:07:32
+    ## Trial: 7, mtry: 3 --- 2019-03-10 22:07:43
+    ## Trial: 7, mtry: 4 --- 2019-03-10 22:07:47
+    ## Trial: 7, mtry: 5 --- 2019-03-10 22:07:53
+    ## Trial: 7, mtry: 6 --- 2019-03-10 22:07:59
+    ## Trial: 7, mtry: 7 --- 2019-03-10 22:08:07
+    ## Trial: 7, mtry: 8 --- 2019-03-10 22:08:15
+    ## Trial: 7, mtry: 9 --- 2019-03-10 22:08:24
+    ## Trial: 8, mtry: 3 --- 2019-03-10 22:08:35
+    ## Trial: 8, mtry: 4 --- 2019-03-10 22:08:39
+    ## Trial: 8, mtry: 5 --- 2019-03-10 22:08:45
+    ## Trial: 8, mtry: 6 --- 2019-03-10 22:08:52
+    ## Trial: 8, mtry: 7 --- 2019-03-10 22:08:59
+    ## Trial: 8, mtry: 8 --- 2019-03-10 22:09:07
+    ## Trial: 8, mtry: 9 --- 2019-03-10 22:09:17
+    ## Trial: 9, mtry: 3 --- 2019-03-10 22:09:27
+    ## Trial: 9, mtry: 4 --- 2019-03-10 22:09:32
+    ## Trial: 9, mtry: 5 --- 2019-03-10 22:09:37
+    ## Trial: 9, mtry: 6 --- 2019-03-10 22:09:44
+    ## Trial: 9, mtry: 7 --- 2019-03-10 22:09:51
+    ## Trial: 9, mtry: 8 --- 2019-03-10 22:10:00
+    ## Trial: 9, mtry: 9 --- 2019-03-10 22:10:09
+    ## Trial: 10, mtry: 3 --- 2019-03-10 22:10:19
+    ## Trial: 10, mtry: 4 --- 2019-03-10 22:10:23
+    ## Trial: 10, mtry: 5 --- 2019-03-10 22:10:29
+    ## Trial: 10, mtry: 6 --- 2019-03-10 22:10:36
+    ## Trial: 10, mtry: 7 --- 2019-03-10 22:10:43
+    ## Trial: 10, mtry: 8 --- 2019-03-10 22:10:52
+    ## Trial: 10, mtry: 9 --- 2019-03-10 22:11:01
+    ## Trial: 11, mtry: 3 --- 2019-03-10 22:11:12
+    ## Trial: 11, mtry: 4 --- 2019-03-10 22:11:16
+    ## Trial: 11, mtry: 5 --- 2019-03-10 22:11:22
+    ## Trial: 11, mtry: 6 --- 2019-03-10 22:11:29
+    ## Trial: 11, mtry: 7 --- 2019-03-10 22:11:36
+    ## Trial: 11, mtry: 8 --- 2019-03-10 22:11:45
+    ## Trial: 11, mtry: 9 --- 2019-03-10 22:11:55
+    ## Trial: 12, mtry: 3 --- 2019-03-10 22:12:05
+    ## Trial: 12, mtry: 4 --- 2019-03-10 22:12:10
+    ## Trial: 12, mtry: 5 --- 2019-03-10 22:12:15
+    ## Trial: 12, mtry: 6 --- 2019-03-10 22:12:22
+    ## Trial: 12, mtry: 7 --- 2019-03-10 22:12:29
+    ## Trial: 12, mtry: 8 --- 2019-03-10 22:12:38
+    ## Trial: 12, mtry: 9 --- 2019-03-10 22:12:47
+    ## Trial: 13, mtry: 3 --- 2019-03-10 22:12:58
+    ## Trial: 13, mtry: 4 --- 2019-03-10 22:13:02
+    ## Trial: 13, mtry: 5 --- 2019-03-10 22:13:08
+    ## Trial: 13, mtry: 6 --- 2019-03-10 22:13:15
+    ## Trial: 13, mtry: 7 --- 2019-03-10 22:13:22
+    ## Trial: 13, mtry: 8 --- 2019-03-10 22:13:31
+    ## Trial: 13, mtry: 9 --- 2019-03-10 22:13:40
+    ## Trial: 14, mtry: 3 --- 2019-03-10 22:13:50
+    ## Trial: 14, mtry: 4 --- 2019-03-10 22:13:55
+    ## Trial: 14, mtry: 5 --- 2019-03-10 22:14:01
+    ## Trial: 14, mtry: 6 --- 2019-03-10 22:14:07
+    ## Trial: 14, mtry: 7 --- 2019-03-10 22:14:15
+    ## Trial: 14, mtry: 8 --- 2019-03-10 22:14:23
+    ## Trial: 14, mtry: 9 --- 2019-03-10 22:14:32
+    ## Trial: 15, mtry: 3 --- 2019-03-10 22:14:42
+    ## Trial: 15, mtry: 4 --- 2019-03-10 22:14:47
+    ## Trial: 15, mtry: 5 --- 2019-03-10 22:14:53
+    ## Trial: 15, mtry: 6 --- 2019-03-10 22:14:59
+    ## Trial: 15, mtry: 7 --- 2019-03-10 22:15:06
+    ## Trial: 15, mtry: 8 --- 2019-03-10 22:15:15
+    ## Trial: 15, mtry: 9 --- 2019-03-10 22:15:24
+    ## Trial: 16, mtry: 3 --- 2019-03-10 22:15:34
+    ## Trial: 16, mtry: 4 --- 2019-03-10 22:15:39
+    ## Trial: 16, mtry: 5 --- 2019-03-10 22:15:44
+    ## Trial: 16, mtry: 6 --- 2019-03-10 22:15:51
+    ## Trial: 16, mtry: 7 --- 2019-03-10 22:15:58
+    ## Trial: 16, mtry: 8 --- 2019-03-10 22:16:07
+    ## Trial: 16, mtry: 9 --- 2019-03-10 22:16:16
+    ## Trial: 17, mtry: 3 --- 2019-03-10 22:16:26
+    ## Trial: 17, mtry: 4 --- 2019-03-10 22:16:31
+    ## Trial: 17, mtry: 5 --- 2019-03-10 22:16:37
+    ## Trial: 17, mtry: 6 --- 2019-03-10 22:16:43
+    ## Trial: 17, mtry: 7 --- 2019-03-10 22:16:50
+    ## Trial: 17, mtry: 8 --- 2019-03-10 22:16:59
+    ## Trial: 17, mtry: 9 --- 2019-03-10 22:17:08
+    ## Trial: 18, mtry: 3 --- 2019-03-10 22:17:18
+    ## Trial: 18, mtry: 4 --- 2019-03-10 22:17:23
+    ## Trial: 18, mtry: 5 --- 2019-03-10 22:17:28
+    ## Trial: 18, mtry: 6 --- 2019-03-10 22:17:35
+    ## Trial: 18, mtry: 7 --- 2019-03-10 22:17:42
+    ## Trial: 18, mtry: 8 --- 2019-03-10 22:17:51
+    ## Trial: 18, mtry: 9 --- 2019-03-10 22:18:00
+    ## Trial: 19, mtry: 3 --- 2019-03-10 22:18:10
+    ## Trial: 19, mtry: 4 --- 2019-03-10 22:18:15
+    ## Trial: 19, mtry: 5 --- 2019-03-10 22:18:21
+    ## Trial: 19, mtry: 6 --- 2019-03-10 22:18:27
+    ## Trial: 19, mtry: 7 --- 2019-03-10 22:18:35
+    ## Trial: 19, mtry: 8 --- 2019-03-10 22:18:43
+    ## Trial: 19, mtry: 9 --- 2019-03-10 22:18:52
+    ## Trial: 20, mtry: 3 --- 2019-03-10 22:19:03
+    ## Trial: 20, mtry: 4 --- 2019-03-10 22:19:07
+    ## Trial: 20, mtry: 5 --- 2019-03-10 22:19:13
+    ## Trial: 20, mtry: 6 --- 2019-03-10 22:19:20
+    ## Trial: 20, mtry: 7 --- 2019-03-10 22:19:27
+    ## Trial: 20, mtry: 8 --- 2019-03-10 22:19:35
+    ## Trial: 20, mtry: 9 --- 2019-03-10 22:19:45
 
 ### Graph
 
@@ -49,107 +199,7 @@ p + geom_line() +
 
 ![](homework-4_files/figure-markdown_github/unnamed-chunk-2-1.png)
 
-``` r
-library(doMC)
-```
-
-    ## Loading required package: iterators
-
-``` r
-registerDoMC(cores = 4)
-set.seed(1982)
-results <- tibble(ntree = ntree,
-                  mtry_3 = 1:20,
-                  mtry_4 = 1:20,
-                  mtry_5 = 1:20,
-                  mtry_6 = 1:20,
-                  mtry_7 = 1:20,
-                  mtry_8 = 1:20,
-                  mtry_9 = 1:20,
-                  mse = 1:20)
-for(i in 1:20){
-  cat(sprintf('ntree: %s --- %s\n', ntree[i],Sys.time()))
-  rf_boston_cv <- train(medv ~ .,
-                      data = training,
-                      method = "rf",
-                      ntree = ntree[i],
-                      importance = T,
-                      tuneGrid = data.frame(mtry = 3:9))
-  results[i, 2:8] <- rf_boston_cv$results$RMSE^2
-}
-```
-
-    ## ntree: 25 --- 2019-03-09 22:26:30
-    ## ntree: 50 --- 2019-03-09 22:26:34
-    ## ntree: 75 --- 2019-03-09 22:26:39
-    ## ntree: 100 --- 2019-03-09 22:26:46
-    ## ntree: 125 --- 2019-03-09 22:26:55
-    ## ntree: 150 --- 2019-03-09 22:27:06
-    ## ntree: 175 --- 2019-03-09 22:27:19
-    ## ntree: 200 --- 2019-03-09 22:27:34
-    ## ntree: 225 --- 2019-03-09 22:27:51
-    ## ntree: 250 --- 2019-03-09 22:28:10
-    ## ntree: 275 --- 2019-03-09 22:28:31
-    ## ntree: 300 --- 2019-03-09 22:28:54
-    ## ntree: 325 --- 2019-03-09 22:29:19
-    ## ntree: 350 --- 2019-03-09 22:29:46
-    ## ntree: 375 --- 2019-03-09 22:30:15
-    ## ntree: 400 --- 2019-03-09 22:30:46
-    ## ntree: 425 --- 2019-03-09 22:31:19
-    ## ntree: 450 --- 2019-03-09 22:31:54
-    ## ntree: 475 --- 2019-03-09 22:32:31
-    ## ntree: 500 --- 2019-03-09 22:33:10
-
-``` r
-results
-```
-
-    ## # A tibble: 20 x 9
-    ##    ntree mtry_3 mtry_4 mtry_5 mtry_6 mtry_7 mtry_8 mtry_9   mse
-    ##    <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl>  <dbl> <int>
-    ##  1    25   14.2   13.1   13.1   12.2   12.6   12.8   12.4     1
-    ##  2    50   14.0   13.3   13.0   13.2   12.8   13.0   13.1     2
-    ##  3    75   14.0   13.1   12.8   12.7   12.8   13.0   13.1     3
-    ##  4   100   13.2   12.5   12.4   12.2   12.3   12.1   12.3     4
-    ##  5   125   12.0   11.2   11.1   10.9   10.9   11.0   11.2     5
-    ##  6   150   14.8   13.9   13.4   13.1   13.1   13.1   13.0     6
-    ##  7   175   12.9   12.3   12.1   12.1   12.2   12.3   12.3     7
-    ##  8   200   14.9   14.0   13.6   13.4   13.4   13.1   13.2     8
-    ##  9   225   15.3   14.2   13.8   13.5   13.2   13.1   13.0     9
-    ## 10   250   15.4   14.5   14.2   13.9   13.9   13.9   13.9    10
-    ## 11   275   15.1   14.3   13.8   13.4   13.6   13.6   13.7    11
-    ## 12   300   14.0   13.2   12.9   12.7   12.5   12.5   12.6    12
-    ## 13   325   13.1   12.5   12.1   11.9   11.9   11.9   11.9    13
-    ## 14   350   13.7   13.0   12.6   12.5   12.4   12.4   12.4    14
-    ## 15   375   13.4   12.5   12.1   12.0   11.9   12.0   12.0    15
-    ## 16   400   15.9   15.2   14.8   14.6   14.5   14.6   14.6    16
-    ## 17   425   14.8   14.1   13.8   13.5   13.4   13.4   13.3    17
-    ## 18   450   14.3   13.4   13.1   12.9   12.8   12.9   13.0    18
-    ## 19   475   15.0   14.2   13.8   13.7   13.6   13.5   13.5    19
-    ## 20   500   13.7   12.8   12.5   12.2   12.1   11.9   12.0    20
-
-Problem 2 \#\#\# Graph
-
-``` r
-#thing <- c(results$ntree,results$mtry_3,results$mtry_4,results$mtry_5,results$mtry_6,results$mtry_7,results$mtry_8,results$mtry_9,results$mse)
-p <- ggplot(data = results,
-           aes(x = ntree, y = mse, col= as.factor(mtry_3)))
-p + geom_line() +
-  geom_point() +
-  scale_color_brewer("mtry_3", palette = "Dark2")
-```
-
-    ## Warning in RColorBrewer::brewer.pal(n, pal): n too large, allowed maximum for palette Dark2 is 8
-    ## Returning the palette you asked for with that many colors
-
-    ## Warning: Removed 12 rows containing missing values (geom_path).
-
-    ## geom_path: Each group consists of only one observation. Do you need to
-    ## adjust the group aesthetic?
-
-    ## Warning: Removed 12 rows containing missing values (geom_point).
-
-![](homework-4_files/figure-markdown_github/unnamed-chunk-5-1.png)
+Describe the results obtained; The results indicate the mtry 6 (variables) with trees around 80 and again at trees around 280 have the lowest MSE.
 
 Problem 8 from Chapter 8 in the text. Set your seed with 9823 and split into train/test using 50% of your data in each split. In addition to parts (a) - (e), do the following:
 
@@ -200,7 +250,7 @@ plot(rtree.carseats)
 text(rtree.carseats,pretty = 0)
 ```
 
-![](homework-4_files/figure-markdown_github/unnamed-chunk-9-1.png)
+![](homework-4_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 ### MSE
 
@@ -212,8 +262,7 @@ print(test.MSE)
 
     ## [1] 4.959247
 
-The most important indicator of sales appears to be 6) Price &lt; 109.5 28 85.5800 12.190 \* followed by 15) Advertising &gt; 13.5 9 15.2700 11.920 \*. The Test MSE is 4.96.
-=============================================================================================================================================================================
+The most important indicator of sales appears to be shelf location and price The Test MSE is 4.96.
 
 ### Part (c): Use cross-validation in order to determine the optimal level of tree complexity. Does pruning the tree improve the test MSE?
 
@@ -253,7 +302,7 @@ print(cv.carseats)
 plot(cv.carseats$size, cv.carseats$dev, type = "b")  
 ```
 
-![](homework-4_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](homework-4_files/figure-markdown_github/unnamed-chunk-10-1.png)
 
 ### Pick the size of the tree you want to prune to: It looks like k=8 is the smallest tree with an error close to the minimum.
 
@@ -264,7 +313,7 @@ plot(prune.carseats)
 text(prune.carseats, pretty = 0)
 ```
 
-![](homework-4_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](homework-4_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 ### Predict the MSE using this tree:
 
@@ -291,7 +340,7 @@ print(mse.bag)
 plot(carseats.bag)
 ```
 
-![](homework-4_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](homework-4_files/figure-markdown_github/unnamed-chunk-14-1.png)
 
 ``` r
 ibag <- importance(carseats.bag)
@@ -325,7 +374,7 @@ print(mse.rf)
 plot(carseats.rf)
 ```
 
-![](homework-4_files/figure-markdown_github/unnamed-chunk-20-1.png)
+![](homework-4_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 ``` r
 irf <- importance(carseats.rf)
@@ -348,12 +397,12 @@ print(irf[order(irf[, 1]), ])
 
 ``` r
 set.seed(9823)
-boost.Carseats=gbm(Sales~.,data=Carseats[train,],distribution="gaussian",n.trees=5000, interaction.depth=4)
-yhat.boost=predict(boost.Carseats,newdata=Carseats[-train,], n.trees=5000)
+boost.Carseats=gbm(Sales~.,data=Carseats[train,],distribution="gaussian",n.trees=2000, interaction.depth=3)
+yhat.boost=predict(boost.Carseats,newdata=Carseats[-train,], n.trees=2000)
 mean((yhat.boost-Carseats[test, ]$Sales)^2)
 ```
 
-    ## [1] 2.169447
+    ## [1] 3.876829
 
 ### How about Gradient Boosting?
 
@@ -485,7 +534,7 @@ gbm_Carseats
 plot(gbm_Carseats)
 ```
 
-![](homework-4_files/figure-markdown_github/unnamed-chunk-24-1.png) \`
+![](homework-4_files/figure-markdown_github/unnamed-chunk-21-1.png) \`
 
 ``` r
 imp <- varImp(gbm_Carseats)$importance
@@ -500,12 +549,12 @@ p + geom_col(fill = "#6e0000") +
   coord_flip()
 ```
 
-![](homework-4_files/figure-markdown_github/unnamed-chunk-25-1.png)
+![](homework-4_files/figure-markdown_github/unnamed-chunk-22-1.png)
 
 ### What about test MSE for GB?
 
 ``` r
-test_preds <- predict(gbm_Carseats, newdata= testing)
+test_preds <- predict(gbm_Carseats, newdata=testing)
 Carseats_test_df <- testing %>%
   mutate(y_hat_gbm = test_preds,
          sq_err_gbm = (y_hat_gbm - Sales)^2)
@@ -550,6 +599,9 @@ summary(lm.fit)
     ## Multiple R-squared:  0.8608, Adjusted R-squared:  0.8527 
     ## F-statistic: 106.3 on 11 and 189 DF,  p-value: < 2.2e-16
 
+Test MSE
+--------
+
 ``` r
 test_preds <- predict(lm.fit, newdata = testing)
 carseats_test_df <- testing %>%
@@ -561,10 +613,11 @@ mean(carseats_test_df$sq_err_rf_4)
     ## [1] 1.012709
 
 ``` r
-## Test MSE
 mean((testing$Sales - predict(lm.fit, newdata = testing))^2)
 ```
 
     ## [1] 1.012709
 
 ### 3. Summarize your results.
+
+The linear model has the lowest mean squared error at 1.02. Gradient boosting had a mean squared error of 1.51. Ramdom forests 3.53
